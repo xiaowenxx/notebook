@@ -1,0 +1,10 @@
+## Customization Point Methods
+
+* Inheritance
+* Class Template Sepicaliztion
+* ADL
+* Customization Point Object
+* Concepts
+* tag_invoke (not in standard)
+* Customizable Functions (not in standard)
+* Reflection (not in standard
