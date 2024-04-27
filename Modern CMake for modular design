@@ -1,0 +1,17 @@
+## Modular design
+* 以模块形式思考构建方式，而不是以编译的flags
+
+## Modern CMake in practice
+* 使用ADD_LIBRARY or ADD_EXECUTABLE声明模块
+* 使用TARGET_XXX()定义编译参数
+* 使用TARGET_LINK_LIBRARIES()定义依赖关系
+* 明确指定PUBLIC和PRIVATE
+
+## Antipatterns
+* 不要使用影响全局的宏：
+  * INCLUDE_DIRECTORIES()
+  * ADD_DEFINITIONS()
+  * LINK_LIBRARIES()
+* 不要使用TARGET_INCLUDE_DIRECTORIES()作用模块外部路径
+* 不要使用TARGET_LINK_LIBRARIES()时不指定PUBLIC，PRIVATE，INTERFACE
+* 不要使用TARGET_COMPILE_OPTIONS()去设置应影响ABI的编译flags
