@@ -1,0 +1,67 @@
+## tricky part
+
+所有临时对象将在包含该临时变量的表达式后才销毁。
+```C++
+std::mutex mtx;
+struct Bar {};
+struct Foo {
+  Foo() : m_look(mtx) {}
+  Bar getBar() { return Bar(); }
+  std::lock_guard<std::mutex> m_lock;
+}
+
+bool doSomething(const Bar& v) {
+  std::lock_guard<std::mutex> lock(mtx); //dead lock, Foo not destory yet
+}
+
+int main() {
+  doSomething(Foo().getBar());
+}
+```
+
+以下除外：
+1. 临时对象用于数组元素初始化或复制时的默认创建的临时对象，生命周期会在下一个元素初始化前结束。
+
+2. 临时对象绑定到引用上时，会将临时变量的生命周期延长到和引用的生命周期一样。[reference lifetime extension]
+    ```C++
+    struct S { 
+      const int m;
+      int& mm() { return m；}
+    }
+
+    const S& s = S();
+    const int& m = S().m;
+    const int& mm = s().mm(); // dangling reference
+    ```
+
+    以下除外：
+    1. 临时对象绑定在函数的引用参数上时，生命周期在包含其的表达式后结束。
+    2. 临时对象绑定在函数的引用返回值上时，生命周期在return语句后结束。
+    3. 临时对象绑定在new-initializer上时，生命周期在包含其的表达式后结束。
+
+        ```C++
+        struct S { 
+          const int m;
+          const std::pair<int, int>& p;
+        }
+        S a{ 1, {2, 3} };
+        S* p = new S{ 1, {2, 3} }; // dangling referece
+        ```
+
+3. 临时对象创建于range-for循环中，将在整个range-for结束后销毁。C++23增加
+    ```C++
+    Struct S {
+      std::vector<int> v { 1, 2, 3 };
+      const vector<int>& get() { return v; }
+    }
+
+    for (const auto& v : S().get()) {
+      std::cout << v << std::endl; // dangling reference before C++23
+    }
+    // const vector<int, allocator<int>> & __range1 = S().get(); // dangling
+    // auto __begin1 = __range1.begin();
+    // auto __end1 = __range1.end();
+    // for (; operator!=(__begin, __end1); __begin1.operator++()) {
+    //   ...  
+    // }
+    ```
