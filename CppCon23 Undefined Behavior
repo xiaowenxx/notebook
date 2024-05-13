@@ -1,0 +1,23 @@
+## UB的原因
+* 性能（允许特定优化）
+* 不同的设备差异
+* 标准制定的疏忽
+* 编译器优化（Compilers need to make assumptions they cannot prove)
+
+## 依赖UB的优化原理
+> 如果UB未发生，结果正确；如果UB发生，结果未定义，正确。
+1. 假设UB不会发生
+2. 移除假设为true的判断
+3. 在这个假设下优化代码
+
+```
+int f(int* p) {
+  ++(*p);            // 假设不为空（UB不会发生）
+  return p ? *p : 0; // 优化成： return *p;
+}
+
+// 优化后
+// mov    (%rdi),%eax
+// inc    %eax
+// mov    %eax,(%rdi)
+```
